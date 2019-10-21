@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "libft.h"
 
+#define magic_number 8384744  //a buffersize larger than this will cause segfault
+
 void	print_buf(void *buf, int size)
 {
 	int i = 0;
