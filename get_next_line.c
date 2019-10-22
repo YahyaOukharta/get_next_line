@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "libft.h"
 
-#define magic_number 8384744  //a buffersize larger than this will cause segfault
+#define MAX_INT 2147483647
 
 void	print_buf(void *buf, int size)
 {
@@ -36,72 +36,60 @@ char	*realloc_and_concat(char *s1, void *buf, size_t bufsize)
 
 int		get_next_line(int fd, char **line)
 {
-	static char *remainder;
-	char buf[BUFFER_SIZE];
-	char *endl;
-	int		remaining_bytes;
-	int		read_b;
-
+	static char		*remainder;
+	char			*buf; //[BUFFER_SIZE];
+	char 			*endl;
+	int				remaining_bytes;
+	int				read_b;
+	// allocating on heap cuz stack is very limited
+	if (fd < 0 || BUFFER_SIZE < 1 || BUFFER_SIZE > MAX_INT || !(buf = (char *)malloc(BUFFER_SIZE)))
+		return (-1);
 	*line = NULL;
-/*	if (!remainder)
-	{
-		char *str = "abcdef\n123456\n123\n!@#$\n\n123\n\0";
-		remainder = realloc_and_concat(remainder, str, ft_strlen(str));
-	}
-*/
-//printf("remainder = <%s>\n", remainder);	
+
 	if (remainder && (endl = ft_memchr(remainder, '\n', ft_strlen(remainder))))
 	{
 		*endl = '\0';
 		*line = realloc_and_concat(*line, remainder, ft_strlen(remainder));
-		//printf("iiiline = %s \n",*line);
 		remainder = endl + 1;
 		return (1);
 	}
 	while((read_b = read(fd, buf, BUFFER_SIZE)))
 	{
-		//printf("started reading, buf=\n");
-		//print_buf(buf, read_b);
+		if (read_b < 0)
+			return (-1);
 		endl = ft_memchr(buf , '\n', read_b);
 		if (remainder)
 		{	
-			//printf("1st remainder = <%s>\n",remainder);
 			*line = realloc_and_concat(*line, remainder, ft_strlen(remainder));
 			remainder = NULL;
 		}
 		if(endl)
 		{
-			//printf("buf = \n");
 			*endl = '\0';
 			*line = realloc_and_concat(*line, buf, ft_strlen(buf));
-			
-			//printf("line = %s\n", *line);
-		
-			// put \0 at end of remainder, ofcourse must duplicate it first 
-			// because buf is emptied on each iteration of the function
-
 			remaining_bytes = read_b - (endl - buf) - 1;
 			remainder = realloc_and_concat(remainder, endl + 1, remaining_bytes);
+			free(buf);
 			return (1);
 		}
 		else
-		{
 			*line = realloc_and_concat(*line, buf, read_b);
-		}
 	}
-
-	return  (0);
+	free(buf);
+	free(*line);
+	return (0);
 }
 
 int main(int argc, char **argv)
 {
 	char **line = (char **)malloc(sizeof(char *));
-	int fd = open("f.txt", O_RDONLY);	
-	if(fd)
+	int fd = 1;//open(argv[1], O_RDONLY );	
+	if(fd > 0)
 		printf("opened file\n");
-	else return 0;
+	else 
+		return 0;
 
-	while(get_next_line(fd,line))
+	while(get_next_line(fd,line) > 0)
 	{
 		printf("<%s>\n",*line);
 	}
