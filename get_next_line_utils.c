@@ -5,13 +5,49 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: youkhart <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/10/24 19:52:15 by youkhart          #+#    #+#             */
-/*   Updated: 2019/10/25 00:47:58 by youkhart         ###   ########.fr       */
+/*   Created: 2019/10/23 17:46:37 by youkhart          #+#    #+#             */
+/*   Updated: 2019/10/27 16:19:45 by youkhart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "get_next_line.h"
 
-size_t	ft_strlen(char *str)
+char	*realloc_and_concat(char *s1, char *buf, size_t bufsize)
+{
+	char	*result;
+	size_t	len;
+	size_t	i;
+
+	len = (s1 ? ft_strlen(s1) : 0);
+	if (!(result = (char *)malloc(len + bufsize + 1)))
+		return (0);
+	i = 0;
+	if (s1)
+	{
+		while (i < len)
+		{
+			result[i] = s1[i];
+			i++;
+		}
+		free(s1);
+	}
+	while (i < bufsize + len)
+	{
+		result[i] = buf[i - len];
+		i++;
+	}
+	result[bufsize + len] = '\0';
+	return (result);
+}
+
+int		error_check(int fd, size_t bufsize)
+{
+	if (fd < 0 || bufsize < 1 || bufsize > MAX_INT)
+		return (1);
+	return (0);
+}
+
+size_t	ft_strlen(const char *str)
 {
 	size_t	i;
 
@@ -21,43 +57,45 @@ size_t	ft_strlen(char *str)
 	return (i);
 }
 
-char	*ft_memchr(char	*b, char c, size_t bufsize)
+void	*ft_memchr(const void *ptr, int c, size_t n)
 {
-	size_t	i;
+	unsigned char	*p;
+	size_t			i;
 
 	i = 0;
-	while (i < bufsize)
+	p = (unsigned char *)ptr;
+	while (i < n)
 	{
-		if (b[i] == c)
-			return (&b[i]);	
+		if (p[i] == (unsigned char)c)
+			return ((void *)&p[i]);
 		i++;
 	}
 	return (0);
 }
-char	*realloc_and_concat(char *s, char *buf, size_t bufsize)
+
+int		read_file(int fd, char **line, char *buf, char **rem)
 {
-	size_t	i;
-	size_t	len;
-	char	*res;
-	
-	len = (s ? ft_strlen(s) : 0);
-	if(!(res = (char *)malloc(sizeof(char) * (len + bufsize + 1))))
-		return (0);
-	i = 0;
-	if (s)
+	char	*endl;
+	int		read_b;
+	int		rem_bytes;
+	char	*tmp;
+
+	while ((read_b = read(fd, buf, BUFFER_SIZE)))
 	{
-		while (s[i])
+		if (read_b < 0)
+			return (-1);
+		if ((endl = ft_memchr(buf, '\n', read_b)))
 		{
-			res[i] = s[i];
-			i++;
+			*endl = '\0';
+			*line = realloc_and_concat(*line, buf, ft_strlen(buf));
+			rem_bytes = read_b - (endl - buf) - 1;
+			*rem = realloc_and_concat(*rem, endl + 1, rem_bytes);
+			return (1);
 		}
-		free (s);
+		else
+			*line = realloc_and_concat(*line, buf, read_b);
 	}
-	while (i < bufsize + len)
-	{
-		res[i] = buf[i - len];
-		i++;
-	}
-	res[len + bufsize] = '\0';
-	return (res);
+	if (!read_b && *line)
+		return (1);
+	return (0);
 }
