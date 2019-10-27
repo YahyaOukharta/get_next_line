@@ -12,7 +12,7 @@
 
 #include "get_next_line.h"
 
-char	*realloc_and_concat(char *s1, char *buf, size_t bufsize)
+char	*realloc_concat(char *s1, char *buf, size_t bufsize)
 {
 	char	*result;
 	size_t	len;
@@ -40,10 +40,12 @@ char	*realloc_and_concat(char *s1, char *buf, size_t bufsize)
 	return (result);
 }
 
-int		error_check(int fd, size_t bufsize)
+int		check(int fd, char **line, size_t bufsize)
 {
-	if (fd < 0 || bufsize < 1 || bufsize > MAX_INT)
+	if (fd < 0 || bufsize < 1 || bufsize > MAX_INT || !line)
 		return (1);
+	if (*line)
+		free(*line);
 	return (0);
 }
 
@@ -87,14 +89,16 @@ int		read_file(int fd, char **line, char *buf, char **rem)
 		if ((endl = ft_memchr(buf, '\n', read_b)))
 		{
 			*endl = '\0';
-			*line = realloc_and_concat(*line, buf, ft_strlen(buf));
-			rem_bytes = read_b - (endl - buf) - 1;
-			*rem = realloc_and_concat(*rem, endl + 1, rem_bytes);
+			*line = realloc_concat(*line, buf, ft_strlen(buf));
+			rem_bytes = read_b - ft_strlen(buf) - 1;
+			*rem = realloc_concat(*rem, endl + 1, rem_bytes);
+			free(buf);
 			return (1);
 		}
 		else
-			*line = realloc_and_concat(*line, buf, read_b);
+			*line = realloc_concat(*line, buf, read_b);
 	}
+	free(buf);
 	if (!read_b && *line)
 		return (1);
 	return (0);
