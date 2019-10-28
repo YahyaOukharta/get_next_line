@@ -6,7 +6,7 @@
 /*   By: youkhart <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/23 17:46:37 by youkhart          #+#    #+#             */
-/*   Updated: 2019/10/27 16:19:45 by youkhart         ###   ########.fr       */
+/*   Updated: 2019/10/28 02:57:51 by youkhart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,6 @@ int		check(int fd, char **line, size_t bufsize)
 {
 	if (fd < 0 || bufsize < 1 || bufsize > MAX_INT || !line)
 		return (1);
-	if (*line)
-		free(*line);
 	return (0);
 }
 
@@ -99,7 +97,7 @@ int		read_file(int fd, char **line, char *buf, char **rem)
 			*line = realloc_concat(*line, buf, read_b);
 	}
 	free(buf);
-	if (!read_b && *line)
-		return (1);
+	//if (!read_b && *line)
+	//	return (1);
 	return (0);
 }
